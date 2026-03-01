@@ -150,6 +150,16 @@ func NewModel(p *player.Player, pl *playlist.Playlist, prov playlist.Provider, l
 // SetAutoPlay makes the player start playback immediately on Init.
 func (m *Model) SetAutoPlay(v bool) { m.autoPlay = v }
 
+// panelWidth returns the usable inner content width based on terminal size.
+// Falls back to 74 (the original fixed width) before the first WindowSizeMsg.
+func (m Model) panelWidth() int {
+	w := m.width
+	if w <= 0 {
+		return 74
+	}
+	return max(34, w-framePadH)
+}
+
 // SetTheme finds a theme by name and applies it. Returns true if found.
 func (m *Model) SetTheme(name string) bool {
 	if name == "" || strings.EqualFold(name, "default") {

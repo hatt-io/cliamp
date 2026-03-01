@@ -86,7 +86,7 @@ func (m Model) View() string {
 	}
 
 	content := strings.Join(sections, "\n")
-	frame := frameStyle.Render(content)
+	frame := frameStyle.Width(m.panelWidth() + framePadH).Render(content)
 
 	// Center horizontally and vertically within the terminal
 	frameW := lipgloss.Width(frame)
@@ -101,7 +101,7 @@ func (m Model) View() string {
 
 // centerOverlay wraps content in a frame and centers it in the terminal.
 func (m Model) centerOverlay(content string) string {
-	frame := frameStyle.Render(content)
+	frame := frameStyle.Width(m.panelWidth() + framePadH).Render(content)
 	padLeft := max(0, (m.width-lipgloss.Width(frame))/2)
 	padTop := max(0, (m.height-lipgloss.Height(frame))/2)
 	return strings.Repeat("\n", padTop) +
@@ -241,7 +241,7 @@ func (m Model) renderQueueOverlay() string {
 
 		for i := scroll; i < len(tracks) && i < scroll+maxVisible; i++ {
 			name := tracks[i].DisplayName()
-			maxW := panelWidth - 8
+			maxW := m.panelWidth() - 8
 			nameRunes := []rune(name)
 			if len(nameRunes) > maxW {
 				name = string(nameRunes[:maxW-1]) + "…"
@@ -362,7 +362,7 @@ func (m Model) renderPlMgrTracks() []string {
 
 	for i := scroll; i < len(m.plMgrTracks) && i < scroll+maxVisible; i++ {
 		name := m.plMgrTracks[i].DisplayName()
-		maxW := panelWidth - 8
+		maxW := m.panelWidth() - 8
 		nameRunes := []rune(name)
 		if len(nameRunes) > maxW {
 			name = string(nameRunes[:maxW-1]) + "…"
@@ -412,7 +412,7 @@ func (m Model) renderTrackInfo() string {
 		name = m.streamTitle
 	}
 
-	maxW := panelWidth - 4
+	maxW := m.panelWidth() - 4
 	runes := []rune(name)
 
 	var titleLine string
@@ -475,7 +475,7 @@ func (m Model) renderTimeStatus() string {
 	}
 
 	left := timeStyle.Render(timeStr)
-	gap := panelWidth - lipgloss.Width(left) - lipgloss.Width(status)
+	gap := m.panelWidth() - lipgloss.Width(left) - lipgloss.Width(status)
 	if gap < 1 {
 		gap = 1
 	}
@@ -518,7 +518,7 @@ func (m Model) renderSeekBar() string {
 	// Show a static streaming bar for non-seekable streams
 	if !m.player.Seekable() && m.player.IsPlaying() {
 		label := " STREAMING "
-		pad := panelWidth - len(label)
+		pad := m.panelWidth() - len(label)
 		left := pad / 2
 		right := pad - left
 		return seekFillStyle.Render(strings.Repeat("━", left) + label + strings.Repeat("━", right))
@@ -533,11 +533,11 @@ func (m Model) renderSeekBar() string {
 	}
 	progress = max(0, min(1, progress))
 
-	filled := int(progress * float64(panelWidth-1))
+	filled := int(progress * float64(m.panelWidth()-1))
 
 	return seekFillStyle.Render(strings.Repeat("━", filled)) +
 		seekFillStyle.Render("●") +
-		seekDimStyle.Render(strings.Repeat("━", max(0, panelWidth-filled-1)))
+		seekDimStyle.Render(strings.Repeat("━", max(0, m.panelWidth()-filled-1)))
 }
 
 func (m Model) renderVolume() string {
@@ -713,7 +713,7 @@ func (m Model) renderPlaylist() string {
 		if qp := m.playlist.QueuePosition(i); qp > 0 {
 			queueSuffix = fmt.Sprintf(" [Q%d]", qp)
 		}
-		maxW := panelWidth - 6 - len([]rune(queueSuffix))
+		maxW := m.panelWidth() - 6 - len([]rune(queueSuffix))
 		nameRunes := []rune(name)
 		if len(nameRunes) > maxW {
 			name = string(nameRunes[:maxW-1]) + "…"
@@ -772,7 +772,7 @@ func (m Model) renderSearchOverlay() string {
 			}
 
 			name := tracks[i].DisplayName()
-			maxW := panelWidth - 8
+			maxW := m.panelWidth() - 8
 			nameRunes := []rune(name)
 			if len(nameRunes) > maxW {
 				name = string(nameRunes[:maxW-1]) + "…"

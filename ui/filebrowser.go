@@ -239,7 +239,7 @@ func (m Model) renderFileBrowser() string {
 			label := check + e.name + suffix
 
 			// Truncate long names.
-			maxW := panelWidth - 4
+			maxW := m.panelWidth() - 4
 			labelRunes := []rune(label)
 			if len(labelRunes) > maxW {
 				label = string(labelRunes[:maxW-1]) + "…"

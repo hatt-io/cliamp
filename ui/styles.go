@@ -24,14 +24,13 @@ var (
 	spectrumHigh lipgloss.TerminalColor = lipgloss.ANSIColor(9)  // bright red
 )
 
-// panelWidth is the usable inner width (80 frame - 6 padding).
-const panelWidth = 74
+// framePadH is the total horizontal padding applied by frameStyle (3 left + 3 right).
+const framePadH = 6
 
 // Lip Gloss styles
 var (
 	frameStyle = lipgloss.NewStyle().
-			Padding(1, 3).
-			Width(80)
+			Padding(1, 3)
 
 	titleStyle = lipgloss.NewStyle().
 			Foreground(colorTitle).

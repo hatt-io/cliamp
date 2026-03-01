@@ -49,8 +49,9 @@ type Model struct {
 	titleOff  int // scroll offset for long track titles
 	err       error
 	quitting  bool
-	width     int
-	height    int
+	width    int
+	height   int
+	renderW  int // per-column override for panelWidth(); 0 = use full width
 
 	provider      playlist.Provider
 	localProvider *local.Provider // direct ref for write operations (add-to-playlist)
@@ -151,13 +152,22 @@ func NewModel(p *player.Player, pl *playlist.Playlist, prov playlist.Provider, l
 func (m *Model) SetAutoPlay(v bool) { m.autoPlay = v }
 
 // panelWidth returns the usable inner content width based on terminal size.
-// Falls back to 74 (the original fixed width) before the first WindowSizeMsg.
+// In two-column mode, renderW overrides the calculation so each column
+// uses its own width. Falls back to 74 before the first WindowSizeMsg.
 func (m Model) panelWidth() int {
+	if m.renderW > 0 {
+		return m.renderW
+	}
 	w := m.width
 	if w <= 0 {
 		return 74
 	}
 	return max(34, w-framePadH)
+}
+
+// isWide reports whether the terminal is wide enough for two-column layout.
+func (m Model) isWide() bool {
+	return m.width >= 140
 }
 
 // SetTheme finds a theme by name and applies it. Returns true if found.

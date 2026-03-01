@@ -55,6 +55,10 @@ func (m Model) View() string {
 		return m.renderFullVisualizer()
 	}
 
+	if m.isWide() {
+		return m.renderWideView()
+	}
+
 	sections := []string{
 		// Now playing
 		m.renderTitle(),
@@ -97,6 +101,54 @@ func (m Model) View() string {
 
 	return strings.Repeat("\n", padTop) +
 		lipgloss.NewStyle().MarginLeft(padLeft).Render(frame)
+}
+
+// renderWideView renders a two-column layout: controls on the left, playlist on the right.
+func (m Model) renderWideView() string {
+	leftW := m.width / 2
+	rightW := m.width - leftW
+
+	// Render left column (player controls)
+	m.renderW = leftW - framePadH
+	leftSections := []string{
+		m.renderTitle(),
+		m.renderTrackInfo(),
+		m.renderTimeStatus(),
+		"",
+		m.renderSpectrum(),
+		m.renderSeekBar(),
+		"",
+		m.renderVolume(),
+		m.renderEQ(),
+		m.renderAudioInfo(),
+	}
+	if m.err != nil {
+		leftSections = append(leftSections, errorStyle.Render(fmt.Sprintf("ERR: %s", m.err)))
+	}
+	if m.saveMsg != "" {
+		leftSections = append(leftSections, statusStyle.Render(m.saveMsg))
+	}
+	leftSections = append(leftSections, "", m.renderHelp())
+	leftContent := strings.Join(leftSections, "\n")
+	leftFrame := frameStyle.Width(leftW).Render(leftContent)
+	leftH := lipgloss.Height(leftFrame)
+
+	// Render right column (playlist) — fill to match left column height.
+	m.renderW = rightW - framePadH
+	// Frame vertical padding is 2 (Padding(1,…) = 1 top + 1 bottom).
+	// Reserve 1 line for the playlist header.
+	m.plVisible = max(5, leftH-2-1)
+	rightSections := []string{
+		m.renderPlaylistHeader(),
+		m.renderPlaylist(),
+	}
+	rightContent := strings.Join(rightSections, "\n")
+	rightFrame := frameStyle.Width(rightW).Height(leftH).Render(rightContent)
+
+	combined := lipgloss.JoinHorizontal(lipgloss.Top, leftFrame, rightFrame)
+	frameH := lipgloss.Height(combined)
+	padTop := max(0, (m.height-frameH)/2)
+	return strings.Repeat("\n", padTop) + combined
 }
 
 // centerOverlay wraps content in a frame and centers it in the terminal.
@@ -684,7 +736,7 @@ func (m Model) renderPlaylist() string {
 				label += fmt.Sprintf(" (%d)", tracks[i].Year)
 			}
 			label += " "
-			pw := panelWidth
+			pw := m.panelWidth()
 			labelLen := len([]rune(label))
 			if labelLen < pw {
 				label += strings.Repeat("─", pw-labelLen)
